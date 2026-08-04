@@ -3,15 +3,13 @@ ARG TARGETPLATFORM
 RUN apk add --no-cache tini ca-certificates
 WORKDIR /app
 
-COPY ${TARGETPLATFORM}/app /app/server/app
+COPY ${TARGETPLATFORM}/app /usr/local/bin/app
 COPY web/build /app/web
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh /app/server/app
+RUN chmod +x /usr/local/bin/app
 
 ENV PORT=3000
 ENV WEB_STATIC_PATH=/app/web
 
 EXPOSE 3000
 
-WORKDIR /app/server
-ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/app"]
