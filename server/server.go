@@ -41,6 +41,7 @@ func NewServer(lc fx.Lifecycle, controllers Controllers) *fuego.Server {
 	server.OpenAPI.Config.JSONFilePath = "openapi.json"
 	server.OpenAPI.Config.SpecURL = "/openapi.json"
 	server.OpenAPI.Config.DisableSwaggerUI = true
+	server.OpenAPI.Config.DisableDefaultServer = true
 	server.OpenAPI.Config.PrettyFormatJSON = true
 
 	server.OpenAPI.SetGeneratorSchemaCustomizer(func(name string, t reflect.Type, tag reflect.StructTag, schema *openapi3.Schema) error {
