@@ -97,7 +97,7 @@ running the server. CI fails if they drift out of sync. Always run
    ```
 
    ```ts
-   import { getNote } from '$lib/sdk';
+   import { getNote } from "$lib/sdk";
    const note = await getNote(id);
    ```
 
@@ -133,16 +133,17 @@ mise.toml                  tools + tasks
 
 ## Tasks
 
-| Task                    | What it does                                     |
-| ----------------------- | ------------------------------------------------ |
-| `mise run dev`          | Run both dev servers                             |
-| `mise run openapi`      | Regenerate the spec and the SDK client           |
-| `mise run build`        | Build the frontend and the server binary         |
-| `mise run lint`         | `go vet` + prettier + eslint                     |
-| `mise run check`        | Type-check the frontend                          |
-| `mise run format`       | Format Go and web code                           |
-| `mise run test`         | Run the Go tests                                 |
-| `mise tasks`            | List every task                                  |
+| Task                        | What it does                                          |
+| --------------------------- | ----------------------------------------------------- |
+| `mise run dev`              | Run both dev servers                                  |
+| `mise run openapi`          | Regenerate the spec and the SDK client                |
+| `mise run build`            | Build the frontend and the server binary              |
+| `mise run lint`             | `go vet` + prettier + eslint                          |
+| `mise run check`            | Type-check the frontend                               |
+| `mise run format`           | Format Go and web code                                |
+| `mise run test`             | Run the Go tests                                      |
+| `mise run release:snapshot` | Build the release binaries and images without pushing |
+| `mise tasks`                | List every task                                       |
 
 ## Production
 
@@ -164,6 +165,16 @@ WEB_STATIC_PATH=../web/build ./tmp/app
 | `PORT`            | `3000`  | Port the server listens on                             |
 | `WEB_STATIC_PATH` | (unset) | Directory of the built frontend to serve; unset in dev |
 | `DATA_DIR`        | `.`     | Directory for application data                         |
+| `TZ`              | (UTC)   | Timezone                                               |
+
+### Docker
+
+```sh
+docker run -d --name app -p 3000:3000 -v app-data:/data ghcr.io/<owner>/<repo>:latest
+```
+
+The image runs as uid `10001` with `DATA_DIR=/data`. A bind mount must be writable by that uid
+(`chown 10001:10001 <dir>`).
 
 ## CI/CD
 
@@ -172,9 +183,12 @@ GitHub Actions in `.github/workflows/`:
 - **build**: builds and tests the server; builds the web bundle.
 - **lint**: formatting, `go vet`, eslint, type-check, and a check that the
   committed OpenAPI spec and SDK client are up to date.
-- **release**: on a `v*` tag, [goreleaser](https://goreleaser.com) builds
-  cross-platform binaries and a multi-arch Docker image pushed to GitHub
-  Container Registry (`ghcr.io/<owner>/<repo>`).
+- **release**: on each push to main, [release-please](https://github.com/googleapis/release-please)
+  keeps a release PR open with the next version and changelog, built from conventional commit
+  messages. Merging it tags the release, and [goreleaser](https://goreleaser.com) then builds
+  binaries and a multi-arch Docker image pushed to GitHub Container Registry
+  (`ghcr.io/<owner>/<repo>`). The first release is `0.1.0`; below 1.0, `feat` bumps the minor
+  version and `fix` the patch. It does not run on the template repository itself.
 
 ## Extending
 
@@ -202,3 +216,6 @@ GitHub Actions in `.github/workflows/`:
 
 3. The release workflow derives the image name from the repository, so no
    changes are needed there.
+4. In the new repository's **Settings › Actions › General**, turn on **Allow GitHub Actions to
+   create and approve pull requests** so release-please can open its release PR. GHCR packages
+   start private; change the visibility in the package settings after the first release.

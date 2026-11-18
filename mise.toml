@@ -3,7 +3,7 @@ go = "1.26.5"
 node = "24"
 pnpm = "latest"
 air = "latest"
-goreleaser = "latest"
+goreleaser = "2.18.3"
 
 [tasks."install:web"]
 description = "Install web dependencies"
@@ -90,3 +90,11 @@ run = "go test ./..."
 [tasks.test]
 description = "Run all tests"
 depends = ["test:server"]
+
+[tasks.release]
+description = "Build and publish binaries and the server image with goreleaser"
+run = "goreleaser release --clean"
+
+[tasks."release:snapshot"]
+description = "Build release binaries and load the images locally without publishing"
+run = "goreleaser release --snapshot --clean"
