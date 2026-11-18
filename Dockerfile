@@ -4,8 +4,8 @@ ARG TARGETPLATFORM
 RUN apk add --no-cache tini ca-certificates tzdata \
 	&& addgroup -S -g 10001 app \
 	&& adduser -S -D -H -u 10001 -G app app \
-	&& mkdir -p /data /app \
-	&& chown app:app /data /app
+	&& mkdir -p /data \
+	&& chown app:app /data
 
 WORKDIR /app
 COPY --chmod=0755 ${TARGETPLATFORM}/app /usr/local/bin/app

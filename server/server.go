@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"app/internal/config"
@@ -39,6 +40,7 @@ func NewServer(lc fx.Lifecycle, controllers Controllers) *fuego.Server {
 	)
 
 	server.OpenAPI.Config.JSONFilePath = "openapi.json"
+	server.OpenAPI.Config.DisableLocalSave = true
 	server.OpenAPI.Config.SpecURL = "/openapi.json"
 	server.OpenAPI.Config.DisableSwaggerUI = true
 	server.OpenAPI.Config.DisableDefaultServer = true
@@ -52,7 +54,7 @@ func NewServer(lc fx.Lifecycle, controllers Controllers) *fuego.Server {
 	})
 
 	api := fuego.Group(server, "/api")
-	for _, controller := range controllers.All {
+	for _, controller := range slices.SortedFunc(slices.Values(controllers.All), byTypeName) {
 		controller.Register(api)
 		slog.Info(fmt.Sprintf("Registered controller: %T", controller))
 	}
@@ -65,6 +67,7 @@ func NewServer(lc fx.Lifecycle, controllers Controllers) *fuego.Server {
 			flag.Parse()
 
 			if *openapi {
+				server.OpenAPI.Config.DisableLocalSave = false
 				server.OutputOpenAPISpec()
 				slog.Info("OpenAPI spec generated successfully.")
 				os.Exit(0)
@@ -84,4 +87,10 @@ func NewServer(lc fx.Lifecycle, controllers Controllers) *fuego.Server {
 	})
 
 	return server
+}
+
+// byTypeName orders controllers for registration. fx hands over value groups in random order, and
+// a shared schema keeps the description of the last route that generated it.
+func byTypeName(a, b controllers.Controller) int {
+	return strings.Compare(fmt.Sprintf("%T", a), fmt.Sprintf("%T", b))
 }
